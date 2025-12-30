@@ -169,6 +169,30 @@ class CmdPlayer(CmdPositioner):
         return CmdPositioner.setPitch(self, [], pitch)
     def getPitch(self):
         return CmdPositioner.getPitch(self, [])
+    
+    # Add these methods to the CmdPlayer class:
+    def getTileLookingAt(self, distance=200):
+        """Get the tile that the player is looking at
+        
+        Args:
+            distance: Max distance to check (default 200)
+        """
+        s = self.conn.sendReceive(b"player.getTileLookingAt", distance)
+        return Vec3(*list(map(int, s.split(","))))
+
+    def strikeLightning(self, x, y, z):
+        """Strike lightning at offset from player
+        
+        Args:
+            x: X offset from player's position
+            y: Y offset from player's position
+            z: Z offset from player's position
+        """
+        self.conn.send(b"player.strikeLightning", x, y, z)
+    
+    def strikeLightningAtSelf(self):
+        """Strike lightning at player's current position"""
+        self.conn.send(b"player.strikeLightningAtSelf")
 
     def getEntities(self, distance=10, typeId=-1):
         """Return a list of entities near entity (distanceFromPlayerInBlocks:int, typeId:int) => [[entityId:int,entityTypeId:int,entityTypeName:str,posX:float,posY:float,posZ:float]]"""
@@ -370,6 +394,31 @@ class Minecraft:
     def removeEntities(self, typeId=-1):
         """Remove entities all currently loaded Entities by type (typeId:int) => (removedEntitiesCount:int)"""
         return int(self.conn.sendReceive(b"world.removeEntities", typeId))
+
+
+    def strikeLightning(self, x, y, z):
+        """Strike lightning at absolute coordinates
+        
+        Args:
+            x: X coordinate
+            y: Y coordinate  
+            z: Z coordinate
+        """
+        self.conn.send(b"world.strikeLightning", x, y, z)
+
+    def strikeLightningEffect(self, x, y, z):
+        """Strike lightning effect (visual only) at coordinates
+        
+        Args:
+            x: X coordinate
+            y: Y coordinate
+            z: Z coordinate
+        """
+        self.conn.send(b"world.strikeLightningEffect", x, y, z)
+
+    def strikeLightningAtEntity(self, entityId):
+        """Strike lightning at entity location"""
+        self.conn.send(b"entity.strikeLightning", entityId)
 
     @staticmethod
     def create(address = "localhost", port = 4711):
