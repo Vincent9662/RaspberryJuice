@@ -99,6 +99,7 @@ public class BlockIdMapper {
         register(126, Material.OAK_SLAB);
         register(128, Material.SANDSTONE_STAIRS);
         register(129, Material.EMERALD_ORE);
+        register(151, Material.DAYLIGHT_DETECTOR);
         register(157, Material.ACTIVATOR_RAIL);
         register(161, Material.DARK_OAK_LEAVES);
         register(167, Material.IRON_TRAPDOOR);

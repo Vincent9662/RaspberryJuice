@@ -28,6 +28,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.Vector;
 
 import org.bukkit.entity.LightningStrike;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.enchantments.Enchantment;
 
 public class RemoteSession {
 
@@ -534,9 +537,102 @@ public class RemoteSession {
 				}
 				// end of Enhanced Version with Player-Based Lightning
 
+				// world.getTime
+			} else if (c.equals("world.getTime")) {
+				send(world.getTime());
+
+				// world.setTime
+			} else if (c.equals("world.setTime")) {
+				world.setTime(Long.parseLong(args[0]));
+				send("Ok");
+
+				// world.setWeather
+			} else if (c.equals("world.setWeather")) {
+				String weather = args[0].toLowerCase();
+				if (weather.equals("sun") || weather.equals("clear")) {
+					world.setStorm(false);
+					world.setThundering(false);
+				} else if (weather.equals("rain") || weather.equals("storm")) {
+					world.setStorm(true);
+					world.setThundering(false);
+				} else if (weather.equals("thunder") || weather.equals("lightning")) {
+					world.setStorm(true);
+					world.setThundering(true);
+				}
+				if (args.length > 1) {
+					int duration = Integer.parseInt(args[1]);
+					world.setWeatherDuration(duration);
+					if (world.isThundering()) {
+						world.setThunderDuration(duration);
+					}
+				}
+				send("Ok");
+
 				// world.getHeight
 			} else if (c.equals("world.getHeight")) {
 				send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
+
+				// entity.addPassenger
+			} else if (c.equals("entity.addPassenger")) {
+				Entity vehicle = plugin.getEntity(Integer.parseInt(args[0]));
+				Entity passenger = plugin.getEntity(Integer.parseInt(args[1]));
+				if (vehicle != null && passenger != null) {
+					send(vehicle.addPassenger(passenger) ? 1 : 0);
+				} else {
+					send("Fail");
+				}
+
+				// entity.setEquipment
+			} else if (c.equals("entity.setEquipment")) {
+				Entity entity = plugin.getEntity(Integer.parseInt(args[0]));
+				if (entity instanceof org.bukkit.entity.LivingEntity) {
+					org.bukkit.entity.LivingEntity living = (org.bukkit.entity.LivingEntity) entity;
+					org.bukkit.inventory.EntityEquipment equip = living.getEquipment();
+					if (equip != null) {
+						String slot = args[1].toLowerCase();
+						String matName = args[2].toUpperCase().trim();
+						Material material = Material.matchMaterial(matName);
+						if (material != null) {
+							ItemStack item = new ItemStack(material);
+							if (args.length > 3) {
+								if (args[3].equals("1") || args[3].equalsIgnoreCase("true")) {
+									item.addUnsafeEnchantment(Enchantment.POWER, 1);
+								} else {
+									for (int i = 3; i < args.length; i += 2) {
+										if (i + 1 < args.length) {
+											String enchantName = args[i];
+											int level = Integer.parseInt(args[i+1]);
+											Enchantment enchant = getEnchantment(enchantName);
+											if (enchant != null) {
+												item.addUnsafeEnchantment(enchant, level);
+											}
+										}
+									}
+								}
+							}
+							if (slot.equals("mainhand") || slot.equals("hand") || slot.equals("0")) {
+								equip.setItemInMainHand(item);
+							} else if (slot.equals("offhand") || slot.equals("1")) {
+								equip.setItemInOffHand(item);
+							} else if (slot.equals("boots") || slot.equals("feet") || slot.equals("2")) {
+								equip.setBoots(item);
+							} else if (slot.equals("leggings") || slot.equals("legs") || slot.equals("3")) {
+								equip.setLeggings(item);
+							} else if (slot.equals("chestplate") || slot.equals("chest") || slot.equals("4")) {
+								equip.setChestplate(item);
+							} else if (slot.equals("helmet") || slot.equals("head") || slot.equals("5")) {
+								equip.setHelmet(item);
+							}
+							send(1);
+						} else {
+							send("Invalid material");
+						}
+					} else {
+						send("No equipment slots");
+					}
+				} else {
+					send("Not a living entity");
+				}
 
 				// entity.getTile
 			} else if (c.equals("entity.getTile")) {
@@ -1208,6 +1304,54 @@ public class RemoteSession {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private Enchantment getEnchantment(String name) {
+		name = name.toLowerCase().trim().replace(" ", "_");
+		// Let's try namespaced key first (modern way)
+		try {
+			org.bukkit.NamespacedKey key = org.bukkit.NamespacedKey.minecraft(name);
+			Enchantment enchant = Enchantment.getByKey(key);
+			if (enchant != null) return enchant;
+		} catch (Throwable e) {}
+		
+		// Fallback to legacy names
+		try {
+			Enchantment enchant = Enchantment.getByName(name.toUpperCase());
+			if (enchant != null) return enchant;
+		} catch (Throwable e) {}
+		
+		// Fallback aliases
+		if (name.equals("unbreaking")) {
+			Enchantment enchant = Enchantment.getByName("DURABILITY");
+			if (enchant != null) return enchant;
+		}
+		if (name.equals("power")) {
+			Enchantment enchant = Enchantment.getByName("ARROW_DAMAGE");
+			if (enchant != null) return enchant;
+		}
+		if (name.equals("flame")) {
+			Enchantment enchant = Enchantment.getByName("ARROW_FIRE");
+			if (enchant != null) return enchant;
+		}
+		if (name.equals("punch")) {
+			Enchantment enchant = Enchantment.getByName("ARROW_KNOCKBACK");
+			if (enchant != null) return enchant;
+		}
+		if (name.equals("sharpness")) {
+			Enchantment enchant = Enchantment.getByName("DAMAGE_ALL");
+			if (enchant != null) return enchant;
+		}
+		if (name.equals("fire_aspect") || name.equals("fireaspect")) {
+			Enchantment enchant = Enchantment.getByName("FIRE_ASPECT");
+			if (enchant != null) return enchant;
+		}
+		if (name.equals("knockback")) {
+			Enchantment enchant = Enchantment.getByName("KNOCKBACK");
+			if (enchant != null) return enchant;
+		}
+
+		return null;
 	}
 
 	/**

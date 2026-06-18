@@ -88,16 +88,37 @@ class CmdPositioner:
         """Set a player setting (setting, status). keys: autojump"""
         self.conn.send(self.pkg + b".setting", setting, 1 if bool(status) else 0)
 
+
 class CmdEntity(CmdPositioner):
     """Methods for entities"""
     def __init__(self, connection):
         CmdPositioner.__init__(self, connection, b"entity")
+    
+    def addPassenger(self, vehicleId, passengerId):
+        """Mounts passengerId onto vehicleId => int (1 if successful, 0 otherwise)"""
+        return int(self.conn.sendReceive(b"entity.addPassenger", vehicleId, passengerId))
+    
+    def setEquipment(self, entityId, slot, material, *enchantments):
+        """Sets the equipment for a living entity.
+        slot can be: 'mainhand', 'offhand', 'boots', 'leggings', 'chestplate', 'helmet'
+        material can be an item/block name like 'BOW' or legacy ID.
+        enchantments can be a boolean for legacy Power I, or list of enchantment/level pairs.
+        """
+        if len(enchantments) == 1 and isinstance(enchantments[0], bool):
+            ench_args = [1 if enchantments[0] else 0]
+        else:
+            ench_args = enchantments
+        return self.conn.sendReceive(b"entity.setEquipment", entityId, slot, material, ench_args)
     
     def getName(self, id):
         """Get the list name of the player with entity id => [name:str]
         
         Also can be used to find name of entity if entity is not a player."""
         return self.conn.sendReceive(b"entity.getName", id)
+
+
+
+
 
     def getEntities(self, id, distance=10, typeId=-1):
         """Return a list of entities near entity (playerEntityId:int, distanceFromPlayerInBlocks:int, typeId:int) => [[entityId:int,entityTypeId:int,entityTypeName:str,posX:float,posY:float,posZ:float]]"""
@@ -424,6 +445,16 @@ class Minecraft:
     def strikeLightningAtEntity(self, entityId):
         """Strike lightning at entity location"""
         self.conn.send(b"entity.strikeLightning", entityId)
+
+    def setWeather(self, weatherType, duration=None):
+        """Set weather of the world.
+        weatherType: 'clear', 'sun', 'rain', 'storm', 'thunder', 'lightning'
+        duration: optional duration in ticks
+        """
+        if duration is not None:
+            return self.conn.sendReceive(b"world.setWeather", weatherType, duration)
+        else:
+            return self.conn.sendReceive(b"world.setWeather", weatherType)
 
     @staticmethod
     def create(address = "localhost", port = 4711):
