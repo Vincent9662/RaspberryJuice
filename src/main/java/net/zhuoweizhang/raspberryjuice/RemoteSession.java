@@ -176,7 +176,7 @@ public class RemoteSession {
 			// world.getBlock
 			if (c.equals("world.getBlock")) {
 				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-				send(world.getBlockTypeIdAt(loc));
+				send(BlockIdMapper.getIdFromMaterial(world.getBlockAt(loc).getType()));
 
 				// world.getBlocks
 			} else if (c.equals("world.getBlocks")) {
@@ -187,7 +187,7 @@ public class RemoteSession {
 				// world.getBlockWithData
 			} else if (c.equals("world.getBlockWithData")) {
 				Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-				send(world.getBlockTypeIdAt(loc) + "," + world.getBlockAt(loc).getData());
+				send(BlockIdMapper.getIdFromMaterial(world.getBlockAt(loc).getType()) + "," + world.getBlockAt(loc).getData());
 
 				// world.setBlock
 			} else if (c.equals("world.setBlock")) {
@@ -720,8 +720,9 @@ public class RemoteSession {
 				// facing direction for wall sign : 2=north, 3=south, 4=west, 5=east
 				// rotation 0 - to 15 for standing sign : 0=south, 4=west, 8=north, 12=east
 				byte blockData = Byte.parseByte(args[4]);
-				if ((thisBlock.getTypeId() != blockType) || (thisBlock.getData() != blockData)) {
-					thisBlock.setTypeIdAndData(blockType, blockData, true);
+				org.bukkit.Material material = BlockIdMapper.getMaterialFromId(blockType);
+				if ((BlockIdMapper.getIdFromMaterial(thisBlock.getType()) != blockType) || (thisBlock.getData() != blockData)) {
+					thisBlock.setBlockData(org.bukkit.Bukkit.getUnsafe().fromLegacy(material, blockData), true);
 				}
 				// plugin.getLogger().info("Creating sign at " + loc);
 				if (thisBlock.getState() instanceof Sign) {
@@ -742,6 +743,16 @@ public class RemoteSession {
 					entityType = EntityType.valueOf(args[3]);
 				}
 				Entity entity = world.spawnEntity(loc, entityType);
+				if (args.length > 4) {
+					boolean isBaby = args[4].equals("1") || args[4].equalsIgnoreCase("true");
+					if (isBaby) {
+						if (entity instanceof org.bukkit.entity.Zombie) {
+							((org.bukkit.entity.Zombie) entity).setBaby(true);
+						} else if (entity instanceof org.bukkit.entity.Ageable) {
+							((org.bukkit.entity.Ageable) entity).setBaby();
+						}
+					}
+				}
 				send(entity.getEntityId());
 
 				// world.getEntityTypes
@@ -807,7 +818,7 @@ public class RemoteSession {
 		for (int y = minY; y <= maxY; ++y) {
 			for (int x = minX; x <= maxX; ++x) {
 				for (int z = minZ; z <= maxZ; ++z) {
-					blockData.append(new Integer(world.getBlockTypeIdAt(x, y, z)).toString() + ",");
+					blockData.append(BlockIdMapper.getIdFromMaterial(world.getBlockAt(x, y, z).getType()) + ",");
 				}
 			}
 		}
@@ -828,8 +839,9 @@ public class RemoteSession {
 
 	private void updateBlock(Block thisBlock, int blockType, byte blockData) {
 		// check to see if the block is different - otherwise leave it
-		if ((thisBlock.getTypeId() != blockType) || (thisBlock.getData() != blockData)) {
-			thisBlock.setTypeIdAndData(blockType, blockData, true);
+		org.bukkit.Material material = BlockIdMapper.getMaterialFromId(blockType);
+		if ((BlockIdMapper.getIdFromMaterial(thisBlock.getType()) != blockType) || (thisBlock.getData() != blockData)) {
+			thisBlock.setBlockData(org.bukkit.Bukkit.getUnsafe().fromLegacy(material, blockData), true);
 		}
 	}
 

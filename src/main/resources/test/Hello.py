@@ -12,6 +12,9 @@ import math
 
 # #Modded Library Tests
 mc = minecraftmodded.Minecraft.create("172.16.1.4")
+# Get the position of player "Vincent_Craft3r"
+vincent_pos = mc.entity.getTilePos(mc.getPlayerEntityId("Vincent_Craft3r"))
+mc.postToChat(f"[-Vincent_Craft3r, your position is at {vincent_pos.x}, {vincent_pos.y}, {vincent_pos.z}-]")
 
 # Get the position of player "Salsa_Craft3r"
 # salsa_pos = mc.entity.getTilePos(mc.getPlayerEntityId("Salsa_Craft3r"))
@@ -68,9 +71,9 @@ pos = mc.player.getPos()
 # except KeyboardInterrupt:
 #     print("Stopped.")
 
-target = mc.player.getTileLookingAt()
-print(pos)
-print(target)
+# target = mc.player.getTileLookingAt()
+# print(pos)
+# print(target)
 
 
 

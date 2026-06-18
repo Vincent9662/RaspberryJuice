@@ -1,4 +1,4 @@
-from .connection import Connection
+from .connection import Connection, RequestError
 from .vec3 import Vec3
 from .event import BlockEvent
 from .block import Block
@@ -147,8 +147,11 @@ class Minecraft:
 
     def getPlayerEntityIds(self):
         """Get the entity ids of the connected players => [id:int]"""
-        ids = self.conn.sendReceive(b"world.getPlayerIds")
-        return list(map(int, ids.split("|")))
+        try:
+            ids = self.conn.sendReceive(b"world.getPlayerIds")
+            return list(map(int, ids.split("|")))
+        except RequestError:
+            return []
 
     def saveCheckpoint(self):
         """Save a checkpoint that can be used for restoring the world"""
