@@ -1002,7 +1002,13 @@ public class RemoteSession {
 		// check to see if the block is different - otherwise leave it
 		org.bukkit.Material material = BlockIdMapper.getMaterialFromId(blockType);
 		if ((BlockIdMapper.getIdFromMaterial(thisBlock.getType()) != blockType) || (thisBlock.getData() != blockData)) {
-			thisBlock.setBlockData(org.bukkit.Bukkit.getUnsafe().fromLegacy(material, blockData), true);
+			org.bukkit.block.data.BlockData bd;
+			if (material.isLegacy()) {
+				bd = org.bukkit.Bukkit.getUnsafe().fromLegacy(material, blockData);
+			} else {
+				bd = material.createBlockData();
+			}
+			thisBlock.setBlockData(bd, true);
 		}
 	}
 
