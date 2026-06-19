@@ -59,6 +59,17 @@ A Bukkit plugin which implements the Minecraft Pi Socket API.
  - entity.pollBlockHits - get block hits for an entity
  - entity.pollChatPosts - get events back for posts to the chat for an entity
  - entity.clearEvents - clear events for this entity
+ - entity.addPassenger(vehicleId, passengerId) - mounts passengerId onto vehicleId
+ - entity.setEquipment(entityId, slot, material, *enchantments) - sets equipment for a living entity
+ - entity.addPotionEffect(entityId, effectName, duration=600, amplifier=0) - adds a potion effect to an entity
+ - player.addPotionEffect(effectName, duration=600, amplifier=0) - adds a potion effect to the player
+ - player.getTileLookingAt(distance=200) - gets the tile coordinates the player is looking at
+ - player.strikeLightning(x, y, z) - strikes lightning at offset from player's position
+ - player.strikeLightningAtSelf() - strikes lightning at player's current position
+ - world.strikeLightning(x, y, z) - strikes lightning at absolute coordinates
+ - world.strikeLightningEffect(x, y, z) - visual-only lightning strike at coordinates
+ - world.strikeLightningAtEntity(entityId) - strikes lightning at an entity's location
+ - world.setWeather(weatherType, duration=None) - sets weather ('clear', 'sun', 'rain', 'storm', 'thunder', 'lightning')
  
 Note - extra features are NOT guaranteed to be maintained in future releases, particularly if updates are made to the original Pi API which replace the functionality
 
@@ -89,6 +100,9 @@ mvn package
 
 ## Version history
 
+ - 26.2 - Updated Spigot dependency to 26.2, fixed block ID mapping and spear aliases
+ - 26.1.2 - Updated Java to 26 and Spigot to 26.1.2, added BlockIdMapper for backward compatibility, expanded Python API with new capabilities (lightning, weather, equipment, potions, passengers)
+ - 1.12.2 - Added compiled jar for raspberryjuice-1.12.2
  - 1.12.1 - hostname specified in config.yml
  - 1.12 - getEntities, removeEntities, pollProjectileHits, events calls by player and entity
  - 1.11 - spawnEntity, setDirection, setRotation, setPitch

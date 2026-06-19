@@ -535,7 +535,28 @@ public class RemoteSession {
 					plugin.getLogger().warning("Error in player.strikeLightningAtSelf: " + e.getMessage());
 					send("Error");
 				}
-				// end of Enhanced Version with Player-Based Lightning
+
+			} else if (c.equals("player.addPotionEffect")) {
+				try {
+					Player currentPlayer = getCurrentPlayer();
+					if (currentPlayer != null) {
+						String effectName = args[0];
+						int duration = Integer.parseInt(args[1]);
+						int amplifier = Integer.parseInt(args[2]);
+						org.bukkit.potion.PotionEffectType type = org.bukkit.potion.PotionEffectType.getByName(effectName.toUpperCase());
+						if (type != null) {
+							currentPlayer.addPotionEffect(new org.bukkit.potion.PotionEffect(type, duration, amplifier));
+							send(1);
+						} else {
+							send("Invalid potion effect");
+						}
+					} else {
+						send("No player");
+					}
+				} catch (Exception e) {
+					plugin.getLogger().warning("Error in player.addPotionEffect: " + e.getMessage());
+					send("Error");
+				}
 
 				// world.getTime
 			} else if (c.equals("world.getTime")) {
@@ -774,6 +795,27 @@ public class RemoteSession {
 
 				send(removeEntities(world, entityId, distance, entityType));
 
+				// entity.getTileLookingAt
+			} else if (c.equals("entity.getTileLookingAt")) {
+				int entityId = Integer.parseInt(args[0]);
+				Entity entity = plugin.getEntity(entityId);
+				int distance = 200;
+				if (args.length > 1) {
+					distance = Integer.parseInt(args[1]);
+					if (distance > 200)
+						distance = 200;
+				}
+				if (entity instanceof LivingEntity) {
+					Block block = ((LivingEntity) entity).getTargetBlock((java.util.Set<org.bukkit.Material>) null, distance);
+					if (block != null) {
+						send(blockLocationToRelative(block.getLocation()));
+					} else {
+						send("Fail");
+					}
+				} else {
+					send("Fail");
+				}
+
 				// Entity-based lightning command (FIXED VERSION)
 			} else if (c.equals("entity.strikeLightning")) {
 				try {
@@ -804,6 +846,29 @@ public class RemoteSession {
 					}
 				} catch (Exception e) {
 					plugin.getLogger().warning("Error in entity.strikeLightningEffect: " + e.getMessage());
+					send("Error");
+				}
+
+			} else if (c.equals("entity.addPotionEffect")) {
+				try {
+					int entityId = Integer.parseInt(args[0]);
+					Entity entity = plugin.getEntity(entityId);
+					if (entity instanceof LivingEntity) {
+						String effectName = args[1];
+						int duration = Integer.parseInt(args[2]);
+						int amplifier = Integer.parseInt(args[3]);
+						org.bukkit.potion.PotionEffectType type = org.bukkit.potion.PotionEffectType.getByName(effectName.toUpperCase());
+						if (type != null) {
+							((LivingEntity) entity).addPotionEffect(new org.bukkit.potion.PotionEffect(type, duration, amplifier));
+							send(1);
+						} else {
+							send("Invalid potion effect");
+						}
+					} else {
+						send("Entity not found or not living");
+					}
+				} catch (Exception e) {
+					plugin.getLogger().warning("Error in entity.addPotionEffect: " + e.getMessage());
 					send("Error");
 				}
 

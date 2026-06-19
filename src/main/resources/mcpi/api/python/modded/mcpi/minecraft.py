@@ -116,6 +116,14 @@ class CmdEntity(CmdPositioner):
         Also can be used to find name of entity if entity is not a player."""
         return self.conn.sendReceive(b"entity.getName", id)
 
+    def addPotionEffect(self, entityId, effectName, duration=600, amplifier=0):
+        """Add a potion effect to a living entity
+        effectName: e.g. 'INVISIBILITY', 'SPEED', etc.
+        duration: duration in ticks (default 600 = 30 seconds)
+        amplifier: level of effect - 1 (default 0)
+        """
+        return self.conn.sendReceive(b"entity.addPotionEffect", entityId, effectName, duration, amplifier)
+
 
 
 
@@ -126,6 +134,18 @@ class CmdEntity(CmdPositioner):
         s = self.conn.sendReceive(b"entity.getEntities", id, distance, typeId)
         entities = [e for e in s.split("|") if e]
         return [ [int(n.split(",")[0]), int(n.split(",")[1]), n.split(",")[2], float(n.split(",")[3]), float(n.split(",")[4]), float(n.split(",")[5])] for n in entities]
+
+    def getTileLookingAt(self, id, distance=200):
+        """Get the tile that the entity is looking at
+        
+        Args:
+            id: Entity ID
+            distance: Max distance to check (default 200)
+        """
+        s = self.conn.sendReceive(b"entity.getTileLookingAt", id, distance)
+        if s == "Fail":
+             return None
+        return Vec3(*list(map(int, s.split(","))))
 
     def removeEntities(self, id, distance=10, typeId=-1):
         """Remove entities all entities near entity (playerEntityId:int, distanceFromPlayerInBlocks:int, typeId:int, ) => (removedEntitiesCount:int)"""
@@ -202,6 +222,14 @@ class CmdPlayer(CmdPositioner):
         if s == "Fail":
              return None
         return Vec3(*list(map(int, s.split(","))))
+
+    def addPotionEffect(self, effectName, duration=600, amplifier=0):
+        """Add a potion effect to the player
+        effectName: e.g. 'INVISIBILITY', 'SPEED', etc.
+        duration: duration in ticks (default 600 = 30 seconds)
+        amplifier: level of effect - 1 (default 0)
+        """
+        return self.conn.sendReceive(b"player.addPotionEffect", effectName, duration, amplifier)
 
     def strikeLightning(self, x, y, z):
         """Strike lightning at offset from player
